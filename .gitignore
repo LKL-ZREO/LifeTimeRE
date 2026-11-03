@@ -1,0 +1,11 @@
+.gradle/
+.kotlin/
+.idea/
+**/build/
+local.properties
+*.iml
+.DS_Store
+captures/
+services/review-gateway/.env
+releases/*
+!releases/LifeTimeRE-0.2.1-user-key-debug.apk

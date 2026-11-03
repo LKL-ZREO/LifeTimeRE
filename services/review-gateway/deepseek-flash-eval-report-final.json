@@ -1,0 +1,491 @@
+{
+  "mode": "live",
+  "datasetVersion": "daily_review_eval_v2",
+  "promptVersion": "daily_review_v4",
+  "schemaVersion": "daily_review_output_v1",
+  "totalCases": 29,
+  "passedCases": 29,
+  "passRate": 1,
+  "metrics": {
+    "missingActions": 0,
+    "falsePositiveActions": 0,
+    "wrongAttributes": 0,
+    "wrongIntensity": 0,
+    "invalidMetadata": 0
+  },
+  "passed": true,
+  "cases": [
+    {
+      "id": "future_plan_only",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "negated_reading",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "unfinished_task",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "identity_statement",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "emotion_only",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "rest_day",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "non_mapped_meditation",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "ordinary_housework",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "prompt_injection_without_action",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "routine_run",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "STRENGTH",
+          "intensity": 1,
+          "quote": "下班后晨跑了三公里。"
+        }
+      ]
+    },
+    {
+      "id": "medium_strength_volume",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "STRENGTH",
+          "intensity": 1,
+          "quote": "晚上做了五十个俯卧撑和五组深蹲。"
+        }
+      ]
+    },
+    {
+      "id": "long_run",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "STRENGTH",
+          "intensity": 3,
+          "quote": "为马拉松训练连续跑了四个小时，完成了三十公里。"
+        }
+      ]
+    },
+    {
+      "id": "short_reading",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "KNOWLEDGE",
+          "intensity": 1,
+          "quote": "睡前认真读了二十分钟历史书。"
+        }
+      ]
+    },
+    {
+      "id": "course_study",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "KNOWLEDGE",
+          "intensity": 2,
+          "quote": "下午完整上完了九十分钟的线性代数课程并整理了笔记。"
+        }
+      ]
+    },
+    {
+      "id": "research_session",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "KNOWLEDGE",
+          "intensity": 2,
+          "quote": "查阅论文并学习实验方法，连续研究了两个半小时。"
+        }
+      ]
+    },
+    {
+      "id": "coding_output",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "SKILL",
+          "intensity": 2,
+          "quote": "花了两个小时写完登录模块的代码并通过了测试。"
+        }
+      ]
+    },
+    {
+      "id": "painting_practice",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "SKILL",
+          "intensity": 2,
+          "quote": "临摹练习了一个小时，完成了一张水彩画。"
+        }
+      ]
+    },
+    {
+      "id": "short_instrument_practice",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "SKILL",
+          "intensity": 1,
+          "quote": "练了二十分钟吉他和弦转换。"
+        }
+      ]
+    },
+    {
+      "id": "pure_focus_endurance",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "ENDURANCE",
+          "intensity": 2,
+          "quote": "把手机放到另一个房间，专注整理纸质档案两个小时。"
+        }
+      ]
+    },
+    {
+      "id": "long_streak_endurance",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "ENDURANCE",
+          "intensity": 3,
+          "quote": "今天完成了连续第三十天的晨间专注打卡。"
+        }
+      ]
+    },
+    {
+      "id": "resilience_adjustment",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "RESILIENCE",
+          "intensity": 1,
+          "quote": "第一次方案失败后，我缩小了范围，重新做了一版并跑通。"
+        }
+      ]
+    },
+    {
+      "id": "resilience_help_seeking",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "RESILIENCE",
+          "intensity": 1,
+          "quote": "卡在这道题很久后，我主动请教了老师并弄懂了错误原因。"
+        }
+      ]
+    },
+    {
+      "id": "difficulty_without_response",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": []
+    },
+    {
+      "id": "partial_completion",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "KNOWLEDGE",
+          "intensity": 1,
+          "quote": "最后只完成了其中十道数学题"
+        }
+      ]
+    },
+    {
+      "id": "duplicate_description",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "STRENGTH",
+          "intensity": 1,
+          "quote": "早上晨跑了三公里。"
+        }
+      ]
+    },
+    {
+      "id": "mixed_completed_actions",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "STRENGTH",
+          "intensity": 2,
+          "quote": "早上跑了五公里"
+        },
+        {
+          "attribute": "KNOWLEDGE",
+          "intensity": 1,
+          "quote": "午休读了半小时专业书"
+        },
+        {
+          "attribute": "SKILL",
+          "intensity": 1,
+          "quote": "晚上完成了一个网页组件"
+        }
+      ]
+    },
+    {
+      "id": "injection_with_real_action",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "KNOWLEDGE",
+          "intensity": 1,
+          "quote": "我读了二十分钟书。"
+        }
+      ]
+    },
+    {
+      "id": "plan_and_actual_action",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "STRENGTH",
+          "intensity": 1,
+          "quote": "今天已经完成了四十分钟的力量训练。"
+        }
+      ]
+    },
+    {
+      "id": "new_dish_skill",
+      "passed": true,
+      "metrics": {
+        "missingActions": 0,
+        "falsePositiveActions": 0,
+        "wrongAttributes": 0,
+        "wrongIntensity": 0,
+        "invalidMetadata": 0
+      },
+      "actualActions": [
+        {
+          "attribute": "SKILL",
+          "intensity": 1,
+          "quote": "照着配方第一次做出了完整的咖喱饭。"
+        }
+      ]
+    }
+  ]
+}

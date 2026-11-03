@@ -1,0 +1,15 @@
+{
+  "name": "lifetimere-review-gateway",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check review-contract.mjs && node --check eval-runner.mjs",
+    "eval": "node eval-runner.mjs",
+    "eval:live": "node eval-runner.mjs --live"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
