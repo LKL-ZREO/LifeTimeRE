@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [DailyEntryEntity::class, JourneyDirectionEntity::class, ReviewEntity::class, EvidenceEntity::class, GrowthLedgerEntity::class, TravelerProfileEntity::class, TravelerAnswerEntity::class, ReviewFeedbackEntity::class, JournalNoteEntity::class],
-    version = 6,
+    entities = [DailyEntryEntity::class, JourneyDirectionEntity::class, ReviewEntity::class, EvidenceEntity::class, GrowthLedgerEntity::class, TravelerProfileEntity::class, TravelerAnswerEntity::class, ReviewFeedbackEntity::class, JournalNoteEntity::class, KeepsakeEntity::class, ProjectEntity::class, ProjectMilestoneEntity::class, ProjectEntryEntity::class, ActionFollowupEntity::class, GrowthRewardEntity::class],
+    version = 10,
     exportSchema = true,
 )
 abstract class LifeTimeDatabase : RoomDatabase() {
@@ -20,7 +20,63 @@ abstract class LifeTimeDatabase : RoomDatabase() {
             context.applicationContext,
             LifeTimeDatabase::class.java,
             "lifetimere.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build()
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `growth_rewards` (`rewardId` TEXT NOT NULL PRIMARY KEY, `sourceEntryId` INTEGER, FOREIGN KEY(`sourceEntryId`) REFERENCES `daily_entries`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_growth_rewards_sourceEntryId` ON `growth_rewards` (`sourceEntryId`)")
+                db.execSQL("UPDATE traveler_profiles SET resilienceTendency = 3 WHERE questionnaireVersion < 2")
+                val legacyTracks = mapOf(
+                    "STRENGTH" to listOf("bracer", "backpack"),
+                    "KNOWLEDGE" to listOf("notebook", "star_map"),
+                    "SKILL" to listOf("sketch", "tool_board"),
+                )
+                for ((attribute, rewards) in legacyTracks) {
+                    db.query(
+                        """
+                        SELECT COALESCE(SUM(g.points), 0) FROM growth_ledger g
+                        JOIN reviews r ON r.entry_id = g.entry_id AND r.revision = g.revision
+                        JOIN daily_entries e ON e.id = r.entry_id AND e.revision = r.revision
+                        WHERE r.status = 'COMPLETE' AND g.attribute_id = ?
+                        """.trimIndent(),
+                        arrayOf(attribute),
+                    ).use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            val points = cursor.getLong(0)
+                            if (points >= 1) db.execSQL("INSERT INTO growth_rewards (rewardId) VALUES (?)", arrayOf(rewards[0]))
+                            if (points >= 5) db.execSQL("INSERT INTO growth_rewards (rewardId) VALUES (?)", arrayOf(rewards[1]))
+                        }
+                    }
+                }
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `action_followups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `projectId` INTEGER NOT NULL, `action` TEXT NOT NULL, `dueDate` TEXT NOT NULL, `status` TEXT NOT NULL, `outcome` TEXT NOT NULL, `completedAt` INTEGER, FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_action_followups_projectId` ON `action_followups` (`projectId`)")
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `projects` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `nextStep` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `project_milestones` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `projectId` INTEGER NOT NULL, `title` TEXT NOT NULL, `completedAt` INTEGER, FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_project_milestones_projectId` ON `project_milestones` (`projectId`)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `project_entries` (`projectId` INTEGER NOT NULL, `entryId` INTEGER NOT NULL, PRIMARY KEY(`projectId`, `entryId`), FOREIGN KEY(`projectId`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE, FOREIGN KEY(`entryId`) REFERENCES `daily_entries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_project_entries_entryId` ON `project_entries` (`entryId`)")
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `keepsakes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `entryId` INTEGER NOT NULL, `quote` TEXT NOT NULL, `title` TEXT NOT NULL, `material` TEXT NOT NULL, `shelfSlot` INTEGER, `chapterSlot` INTEGER, FOREIGN KEY(`entryId`) REFERENCES `daily_entries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_keepsakes_entryId` ON `keepsakes` (`entryId`)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_keepsakes_shelfSlot` ON `keepsakes` (`shelfSlot`)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_keepsakes_chapterSlot` ON `keepsakes` (`chapterSlot`)")
+            }
+        }
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {

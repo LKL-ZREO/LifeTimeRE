@@ -12,13 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.lifetimere.app.ui.components.ArtDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.lifetimere.app.ui.components.ArtTextButton as OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.lifetimere.app.ui.components.ArtTextButton as TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -116,7 +116,8 @@ fun HistoryScreen(
     }
 
     deletingEntry?.let { entry ->
-        AlertDialog(
+        ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_atlas_panel,
             onDismissRequest = { deletingEntry = null },
             title = { Text("删除这篇旅志？") },
             text = { Text("${formatDate(entry)}的记录将从本机删除。后续产生的回响也会随记录一起清理。") },
@@ -273,7 +274,8 @@ private fun WeeklyItemGroup(
 
 @Composable
 private fun WeeklySourceDialog(item: WeeklyReviewItem, onDismiss: () -> Unit) {
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_atlas_panel,
         onDismissRequest = onDismiss,
         title = { Text("${item.date.monthValue}月${item.date.dayOfMonth}日 · 原文") },
         text = {
@@ -316,7 +318,8 @@ private fun EditEntryDialog(
 ) {
     var body by remember(entry.id, entry.revision) { mutableStateOf(entry.body) }
     val normalizedBody = body.trim()
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_atlas_panel,
         onDismissRequest = onDismiss,
         title = { Text("编辑 ${formatDate(entry)}") },
         text = {

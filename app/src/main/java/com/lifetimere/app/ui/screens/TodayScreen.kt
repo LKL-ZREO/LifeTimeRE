@@ -1,19 +1,27 @@
 package com.lifetimere.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import com.lifetimere.app.domain.GrowthReward
+import com.lifetimere.app.domain.UnlockedGrowthReward
+import com.lifetimere.app.ui.components.art
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.lifetimere.app.ui.components.ArtDialog
+import com.lifetimere.app.ui.components.ArtTextButton as Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.lifetimere.app.ui.components.ArtTextButton as TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +54,8 @@ fun TodayScreen(
     onDraftChange: (String) -> Unit,
     onSave: () -> Unit,
     onOpenSettings: () -> Unit = {},
+    rewards: List<UnlockedGrowthReward> = emptyList(),
+    onViewReward: (GrowthReward) -> Unit = {},
     onReportReview: (Long, ReviewFeedbackReason) -> Unit = { _, _ -> },
     onSummarize: () -> Unit = {},
     onEditNote: (Long, String) -> Unit = { _, _ -> },
@@ -116,6 +126,23 @@ fun TodayScreen(
                 enabled = uiState.savedEntry != null && uiState.aiConfigured && !uiState.isAnalyzing && !uiState.isSaving && uiState.hasPendingNotes,
             ) { Text(if (uiState.isAnalyzing) "营火正在倾听……" else "现在汇总已保存的记录", color = PixelGold) }
         }
+        val todayRewards = rewards.filter { it.sourceEntryId == uiState.savedEntry?.id && it.sourceEntryId != null }
+        AnimatedVisibility(visible = todayRewards.isNotEmpty()) {
+            PixelPanel {
+                PixelTag("营地藏品已解锁", PixelGold)
+                todayRewards.forEach { unlock ->
+                    TextButton(onClick = { onViewReward(unlock.reward) }) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Image(painterResource(unlock.reward.art), null, Modifier.size(42.dp))
+                            Text("${unlock.reward.title} · 去看看", color = PixelGold)
+                        }
+                    }
+                }
+            }
+        }
         if (uiState.notes.isNotEmpty()) {
             Text("今天的足迹", style = MaterialTheme.typography.titleLarge, color = PixelParchment)
             uiState.notes.asReversed().forEach { note ->
@@ -145,7 +172,8 @@ fun TodayScreen(
     }
     editing?.let { note ->
         var body by remember(note.id) { mutableStateOf(note.body) }
-        AlertDialog(
+        ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_tent_panel,
             onDismissRequest = { editing = null },
             title = { Text("修改这笔足迹") },
             text = { OutlinedTextField(value = body, onValueChange = { body = it.take(LifeTimeViewModel.MAX_DRAFT_LENGTH) }, modifier = Modifier.fillMaxWidth()) },
@@ -154,7 +182,8 @@ fun TodayScreen(
         )
     }
     deleting?.let { note ->
-        AlertDialog(
+        ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_tent_panel,
             onDismissRequest = { deleting = null },
             title = { Text("删除这笔足迹？") },
             text = { Text("删除后会按剩余记录重新汇总；删除当天最后一笔时，当天回响和成长也会一起清除。") },

@@ -145,12 +145,5 @@ private fun campfireForeground(viewport: PixelSceneViewport): Path = Path().appl
     val potTopLeft = viewport.point(454f, 955f)
     val potBottomRight = viewport.point(560f, 1050f)
     addOval(Rect(potTopLeft, potBottomRight))
-//    polygon(507f to 854f, 519f to 856f, 399f to 1161f, 384f to 1164f)
-//    polygon(519f to 856f, 531f to 854f, 672f to 1160f, 657f to 1163f)
-    // The foremost crossed logs and stone rim hide the flame's lower edge.
-//    polygon(
-//        443f to 1125f, 470f to 1106f, 489f to 1093f, 515f to 1106f,
-//        532f to 1096f, 571f to 1118f, 607f to 1146f, 603f to 1184f,
-//        408f to 1184f, 408f to 1151f,
-//    )
+
 }

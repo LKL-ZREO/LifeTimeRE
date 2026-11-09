@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.lifetimere.app.data.local.LifeTimeDatabase
 import com.lifetimere.app.domain.CharacterAttribute
+import com.lifetimere.app.domain.GrowthReward
 import org.json.JSONObject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -44,7 +45,7 @@ class LifeTimeMigrationTest {
                 old.version = 4
             } finally { old.close() }
             val upgraded = Room.databaseBuilder(context, LifeTimeDatabase::class.java, name)
-                .addMigrations(LifeTimeDatabase.MIGRATION_4_5, LifeTimeDatabase.MIGRATION_5_6).build()
+                .addMigrations(LifeTimeDatabase.MIGRATION_4_5, LifeTimeDatabase.MIGRATION_5_6, LifeTimeDatabase.MIGRATION_6_7, LifeTimeDatabase.MIGRATION_7_8, LifeTimeDatabase.MIGRATION_8_9, LifeTimeDatabase.MIGRATION_9_10).build()
             try {
                 val repository = LifeTimeRepository(upgraded)
                 val entry = upgraded.dao().getEntry(1)!!
@@ -54,6 +55,7 @@ class LifeTimeMigrationTest {
                 assertEquals(20L, note.updatedAt)
                 assertEquals(2, entry.revision)
                 assertEquals(mapOf(CharacterAttribute.STRENGTH to 1), repository.observeAttributeTotals().first())
+                assertEquals(GrowthReward.BRACER, repository.observeGrowthRewards().first().single().reward)
                 val review = repository.observeReview(1).first()!!
                 assertEquals("old-model", review.metadata.model)
                 assertEquals("daily_review_v4", review.metadata.promptVersion)
@@ -88,6 +90,10 @@ class LifeTimeMigrationTest {
                         LifeTimeDatabase.MIGRATION_3_4,
                         LifeTimeDatabase.MIGRATION_4_5,
                         LifeTimeDatabase.MIGRATION_5_6,
+                        LifeTimeDatabase.MIGRATION_6_7,
+                        LifeTimeDatabase.MIGRATION_7_8,
+                        LifeTimeDatabase.MIGRATION_8_9,
+                        LifeTimeDatabase.MIGRATION_9_10,
                     )
                     .build()
                 try {

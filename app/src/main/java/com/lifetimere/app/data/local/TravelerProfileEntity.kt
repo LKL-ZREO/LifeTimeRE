@@ -31,10 +31,9 @@ data class TravelerProfileEntity(
         answers = answers,
         tendencies = mapOf(
             CharacterAttribute.STRENGTH to strengthTendency,
-            CharacterAttribute.ENDURANCE to enduranceTendency,
             CharacterAttribute.KNOWLEDGE to knowledgeTendency,
-            CharacterAttribute.SKILL to skillTendency,
-            CharacterAttribute.RESILIENCE to resilienceTendency,
+            CharacterAttribute.CREATION to skillTendency,
+            CharacterAttribute.SPIRIT to resilienceTendency,
         ),
         updatedAtEpochMillis = updatedAtEpochMillis,
     )

@@ -26,6 +26,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -72,6 +73,12 @@ fun Page(
         "设置" -> R.drawable.world_workshop_art
         else -> R.drawable.world_camp_art
     }
+    val buttonArt = when (title) {
+        "今日旅志", "旅程回顾" -> R.drawable.world_paper_button
+        "设置" -> R.drawable.world_cloth_button
+        else -> R.drawable.world_wood_button
+    }
+    CompositionLocalProvider(LocalArtButton provides buttonArt) {
     Box(modifier = Modifier.fillMaxSize().background(PixelNight)) {
         Image(
             painter = painterResource(art), contentDescription = null,
@@ -117,6 +124,7 @@ fun Page(
             content()
             Spacer(Modifier.height(4.dp))
         }
+    }
     }
 }
 
@@ -246,8 +254,8 @@ fun attributeColor(attribute: CharacterAttribute): Color = when (attribute) {
     CharacterAttribute.STRENGTH -> PixelCoral
     CharacterAttribute.ENDURANCE -> PixelForest
     CharacterAttribute.KNOWLEDGE -> PixelTeal
-    CharacterAttribute.SKILL -> PixelAmber
-    CharacterAttribute.RESILIENCE -> PixelViolet
+    CharacterAttribute.SKILL, CharacterAttribute.CREATION -> PixelAmber
+    CharacterAttribute.RESILIENCE, CharacterAttribute.SPIRIT -> PixelViolet
 }
 
 @Composable
@@ -271,11 +279,11 @@ fun AttributeIcon(attribute: CharacterAttribute, modifier: Modifier = Modifier) 
                 block(2, 2, 4, 8); block(6, 2, 4, 8)
                 block(5, 3, 2, 7, PixelParchment); block(3, 4, 2, 1, PixelInk); block(7, 4, 2, 1, PixelInk)
             }
-            CharacterAttribute.SKILL -> {
+            CharacterAttribute.SKILL, CharacterAttribute.CREATION -> {
                 block(5, 1, 2, 7); block(3, 3, 6, 2)
                 block(2, 7, 3, 3); block(7, 7, 3, 3)
             }
-            CharacterAttribute.RESILIENCE -> {
+            CharacterAttribute.RESILIENCE, CharacterAttribute.SPIRIT -> {
                 block(4, 1, 4, 2); block(2, 3, 8, 4); block(3, 7, 6, 2); block(5, 9, 2, 2)
                 block(5, 4, 2, 3, PixelParchment)
             }

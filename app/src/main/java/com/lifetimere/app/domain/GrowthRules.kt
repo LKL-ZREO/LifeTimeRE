@@ -3,7 +3,7 @@ package com.lifetimere.app.domain
 data class AwardedAction(val action: DetectedAction, val points: Int)
 
 object GrowthRules {
-    const val VERSION = 1
+    const val VERSION = 2
     const val MAX_PER_ATTRIBUTE = 3
     const val MAX_PER_DAY = 8
 

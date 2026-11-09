@@ -7,6 +7,7 @@ import com.lifetimere.app.data.local.LifeTimeDatabase
 import com.lifetimere.app.data.model.ReviewStatus
 import com.lifetimere.app.data.model.ReviewAttemptStatus
 import com.lifetimere.app.domain.CharacterAttribute
+import com.lifetimere.app.domain.GrowthReward
 import com.lifetimere.app.domain.DailySettlement
 import com.lifetimere.app.domain.DetectedAction
 import com.lifetimere.app.domain.DetectedReview
@@ -48,6 +49,85 @@ class JournalSettlementTest {
         assertNull(repository.journalSnapshot(first.id))
         assertEquals(1, repository.observeCampState().first().settledDates)
         assertEquals(1, repository.observeAttributeTotals().first()[CharacterAttribute.STRENGTH])
+    }
+
+    @Test fun growthRewardsUnlockAtThresholdAndSurviveRecalculationAndDeletion() = runBlocking {
+        val first = repository.appendNote(date, "Asia/Shanghai", "画完了一张插画", 1)
+        val firstResult = DetectedReview("完成插画。", listOf(
+            DetectedAction("draw", CharacterAttribute.CREATION, 3, "画完了一张插画", "完成创作"),
+        ))
+        val snapshot = repository.journalSnapshot(first.id)!!
+        assertTrue(repository.settleJournal(snapshot, firstResult))
+        assertFalse(repository.settleJournal(snapshot, firstResult))
+        assertEquals(GrowthReward.SKETCH, repository.observeGrowthRewards().first().single().reward)
+
+        val second = repository.appendNote(date.plusDays(1), "Asia/Shanghai", "修好了一把椅子", 2)
+        val secondResult = DetectedReview("修好椅子。", listOf(
+            DetectedAction("repair", CharacterAttribute.CREATION, 2, "修好了一把椅子", "完成修缮"),
+        ))
+        assertTrue(repository.settleJournal(repository.journalSnapshot(second.id)!!, secondResult))
+        val unlocks = repository.observeGrowthRewards().first().associateBy { it.reward }
+        assertEquals(first.id, unlocks.getValue(GrowthReward.SKETCH).sourceEntryId)
+        assertEquals(second.id, unlocks.getValue(GrowthReward.TOOL_BOARD).sourceEntryId)
+
+        val note = repository.observeNotes().first().single { it.entryId == second.id }
+        repository.editNote(second.id, note.id, "我想修椅子", 3)
+        assertTrue(repository.settleJournal(repository.journalSnapshot(second.id)!!, DetectedReview("记录了想法。", emptyList())))
+        assertEquals(3, repository.observeAttributeTotals().first()[CharacterAttribute.CREATION])
+        assertEquals(2, repository.observeGrowthRewards().first().size)
+
+        repository.deleteEntry(first.id)
+        assertNull(repository.observeGrowthRewards().first().single { it.reward == GrowthReward.SKETCH }.sourceEntryId)
+        assertEquals(2, repository.observeGrowthRewards().first().size)
+    }
+
+    @Test fun actionFollowupCanBeRescheduledAndCompletedOnce() = runBlocking {
+        val projectId = repository.createProject("论文")!!
+        assertTrue(repository.createActionFollowup(projectId, "修改第一节", date.plusDays(1)))
+        val followup = repository.observeActionFollowups().first().single()
+        assertTrue(repository.rescheduleActionFollowup(followup.id, date.plusDays(2)))
+        assertEquals(date.plusDays(2).toString(), repository.observeActionFollowups().first().single().dueDate)
+        assertTrue(repository.completeActionFollowup(followup.id, "ADJUSTED", "改为先核对数据"))
+        assertFalse(repository.completeActionFollowup(followup.id, "DONE", "重复完成"))
+        assertFalse(repository.rescheduleActionFollowup(followup.id, date.plusDays(3)))
+        assertEquals("改为先核对数据", repository.observeActionFollowups().first().single().outcome)
+    }
+
+    @Test fun projectTracksMilestonesAndRemovesDeletedJournalLinks() = runBlocking {
+        val projectId = repository.createProject("写论文")!!
+        val day = repository.appendNote(date, "Asia/Shanghai", "完成提纲", 1)
+        assertTrue(repository.setProjectEntry(projectId, day.id, true))
+        assertTrue(repository.setProjectNextStep(projectId, "修改第一节"))
+        assertTrue(repository.addProjectMilestone(projectId, "完成初稿"))
+        val milestone = repository.observeProjectMilestones().first().single()
+        assertTrue(repository.setMilestoneComplete(milestone.id, true))
+        assertNotNull(repository.observeProjectMilestones().first().single().completedAt)
+        assertEquals("修改第一节", repository.observeProjects().first().single().nextStep)
+        repository.deleteEntry(day.id)
+        assertTrue(repository.observeProjectEntries().first().isEmpty())
+        assertEquals(projectId, repository.observeProjects().first().single().id)
+    }
+
+    @Test fun keepsakeRequiresSettledOriginalAndDisplaysIndependentlyUntilSourceChanges() = runBlocking {
+        val day = repository.appendNote(date, "Asia/Shanghai", "跑了三公里", 1)
+        assertFalse(repository.craftKeepsake(day.id, "跑了三公里", "晨跑", "木牌"))
+        assertTrue(repository.settleJournal(repository.journalSnapshot(day.id)!!, result))
+        assertFalse(repository.craftKeepsake(day.id, "跑了五公里", "晨跑", "木牌"))
+        assertTrue(repository.craftKeepsake(day.id, "跑了三公里", "晨跑", "木牌"))
+        val item = repository.observeKeepsakes().first().single()
+        assertTrue(repository.displayKeepsake(item.id, chapter = false))
+        assertTrue(repository.displayKeepsake(item.id, chapter = true))
+        val displayed = repository.observeKeepsakes().first().single()
+        assertNotNull(displayed.shelfSlot)
+        assertNotNull(displayed.chapterSlot)
+        assertTrue(repository.displayKeepsake(null, chapter = true))
+        assertNotNull(repository.observeKeepsakes().first().single().shelfSlot)
+
+        val note = repository.observeNotes().first().single()
+        repository.editNote(day.id, note.id, "今天休息", 2)
+        assertFalse(repository.displayKeepsake(item.id, chapter = false))
+        repository.deleteEntry(day.id)
+        assertTrue(repository.observeKeepsakes().first().isEmpty())
     }
 
     @Test fun lateCaptureRetainsPointsAndNextSettlementReplacesInsteadOfAdding() = runBlocking {

@@ -10,13 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.lifetimere.app.ui.components.ArtDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.lifetimere.app.ui.components.ArtTextButton as TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -142,7 +142,8 @@ fun WorldScreen(
         )
     }
     if (showWorkshopLocked) {
-        AlertDialog(
+        ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_fire_panel,
             onDismissRequest = { showWorkshopLocked = false },
             title = { Text("工坊尚未苏醒") },
             text = {
@@ -190,7 +191,8 @@ private fun CampArchiveDialog(
 ) {
     val nextMilestone = campState.nextMilestone
     val remaining = (nextMilestone - campState.settledDates).coerceAtLeast(0)
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_fire_panel,
         onDismissRequest = onDismiss,
         title = { Text("营地档案") },
         text = {
@@ -243,7 +245,8 @@ private fun JourneyDirectionDialog(
 ) {
     var value by remember(currentValue) { mutableStateOf(currentValue) }
     val presets = listOf("规律运动", "持续学习", "完成作品")
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_fire_panel,
         onDismissRequest = onDismiss,
         title = { Text("选择冒险方向") },
         text = {

@@ -183,11 +183,48 @@ class LifeTimeViewModel(application: Application) : AndroidViewModel(application
         initialValue = emptyMap(),
     )
 
+    val growthRewards = repository.observeGrowthRewards().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+    )
+
     val growthSources: StateFlow<List<GrowthSource>> = repository.observeGrowthSources().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
     )
+
+    val actionFollowups = repository.observeActionFollowups().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+    )
+    suspend fun createActionFollowup(projectId: Long, action: String, date: LocalDate) =
+        repository.createActionFollowup(projectId, action, date)
+    suspend fun rescheduleActionFollowup(id: Long, date: LocalDate) =
+        repository.rescheduleActionFollowup(id, date)
+    suspend fun completeActionFollowup(id: Long, status: String, outcome: String) =
+        repository.completeActionFollowup(id, status, outcome)
+
+    val projects = repository.observeProjects().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+    )
+    val projectMilestones = repository.observeProjectMilestones().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+    )
+    val projectEntries = repository.observeProjectEntries().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+    )
+    suspend fun createProject(name: String) = repository.createProject(name)
+    suspend fun addProjectMilestone(id: Long, title: String) = repository.addProjectMilestone(id, title)
+    suspend fun setMilestoneComplete(id: Long, complete: Boolean) = repository.setMilestoneComplete(id, complete)
+    suspend fun setProjectNextStep(id: Long, nextStep: String) = repository.setProjectNextStep(id, nextStep)
+    suspend fun setProjectEntry(id: Long, entryId: Long, linked: Boolean) =
+        repository.setProjectEntry(id, entryId, linked)
+
+    val worldDate: StateFlow<LocalDate> = currentDate
+    val keepsakes = repository.observeKeepsakes().stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+    )
+
+    suspend fun displayKeepsake(id: Long?, chapter: Boolean): Boolean = repository.displayKeepsake(id, chapter)
 
     val weeklyReview: StateFlow<WeeklyReview> = combine(entries, growthSources, currentDate) { journal, sources, date ->
         WeeklyReviewBuilder.build(date, journal, sources)

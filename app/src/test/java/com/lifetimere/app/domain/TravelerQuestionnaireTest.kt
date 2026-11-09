@@ -8,7 +8,7 @@ class TravelerQuestionnaireTest {
     @Test fun neutralAnswersProduceNeutralProfile() {
         val answers = TravelerQuestionnaire.questions.associate { it.id to TravelerQuestionnaire.NEUTRAL_OPTION_ID }
 
-        assertEquals(CharacterAttribute.entries.associateWith { 3 }, TravelerProfileScorer.score(answers))
+        assertEquals(CharacterAttribute.active.associateWith { 3 }, TravelerProfileScorer.score(answers))
     }
 
     @Test fun answersProduceStableBoundedTendencies() {
@@ -18,7 +18,7 @@ class TravelerQuestionnaireTest {
 
         val result = TravelerProfileScorer.score(answers)
         assertEquals(result, TravelerProfileScorer.score(answers))
-        assertEquals(CharacterAttribute.entries.toSet(), result.keys)
+        assertEquals(CharacterAttribute.active.toSet(), result.keys)
         assertTrue(result.values.all { it in 1..5 })
     }
 
@@ -27,10 +27,10 @@ class TravelerQuestionnaireTest {
         val planQuestion = TravelerQuestionnaire.questions.first { it.id == "plan_changed" }
         val withoutSkillSignal = TravelerProfileScorer.score(answers)
 
-        assertTrue(planQuestion.options.all { CharacterAttribute.SKILL !in it.scores })
+        assertTrue(planQuestion.options.all { CharacterAttribute.CREATION !in it.scores })
         answers[planQuestion.id] = planQuestion.options.first { it.id == "reorder" }.id
         val withPlanAnswer = TravelerProfileScorer.score(answers)
 
-        assertEquals(withoutSkillSignal[CharacterAttribute.SKILL], withPlanAnswer[CharacterAttribute.SKILL])
+        assertEquals(withoutSkillSignal[CharacterAttribute.CREATION], withPlanAnswer[CharacterAttribute.CREATION])
     }
 }

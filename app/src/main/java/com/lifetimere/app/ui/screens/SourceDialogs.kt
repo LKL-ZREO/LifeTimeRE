@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.lifetimere.app.ui.components.ArtDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.lifetimere.app.ui.components.ArtTextButton as TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +35,8 @@ fun SourceListDialog(
     onOpen: (GrowthSource) -> Unit,
     summary: String? = null,
 ) {
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_atlas_panel,
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
@@ -78,7 +79,8 @@ fun SourceDetailDialog(
     onReportReview: ((Long, ReviewFeedbackReason) -> Unit)? = null,
 ) {
     var showCorrectionDialog by remember { mutableStateOf(false) }
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_atlas_panel,
         onDismissRequest = onDismiss,
         title = { Text(formatSourceDate(source)) },
         text = {
@@ -145,7 +147,8 @@ fun ReviewCorrectionDialog(
     onSubmit: (ReviewFeedbackReason) -> Unit,
 ) {
     var selected by remember { mutableStateOf(ReviewFeedbackReason.EVIDENCE_MISMATCH) }
-    AlertDialog(
+    ArtDialog(
+        art = com.lifetimere.app.R.drawable.world_atlas_panel,
         onDismissRequest = onDismiss,
         title = { Text("这次判断哪里不准确？") },
         text = {

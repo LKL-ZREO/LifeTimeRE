@@ -20,6 +20,9 @@ import com.lifetimere.app.data.model.ReviewAttemptStatus
 import com.lifetimere.app.data.model.ReviewStatus
 import com.lifetimere.app.data.model.TravelerProfile
 import com.lifetimere.app.data.model.TravelerProfileStatus
+import com.lifetimere.app.data.local.GrowthRewardEntity
+import com.lifetimere.app.domain.GrowthReward
+import com.lifetimere.app.domain.UnlockedGrowthReward
 import com.lifetimere.app.domain.CharacterAttribute
 import com.lifetimere.app.domain.CampStage
 import com.lifetimere.app.domain.CampState
@@ -32,11 +35,108 @@ import com.lifetimere.app.domain.TravelerProfileScorer
 import com.lifetimere.app.domain.TravelerQuestionnaire
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+import com.lifetimere.app.data.local.KeepsakeEntity
+import com.lifetimere.app.data.local.ActionFollowupEntity
+import com.lifetimere.app.data.local.ProjectEntity
+import com.lifetimere.app.data.local.ProjectEntryEntity
+import com.lifetimere.app.data.local.ProjectMilestoneEntity
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 class LifeTimeRepository(private val database: LifeTimeDatabase) {
     private val dao = database.dao()
+
+    fun observeActionFollowups() = dao.observeActionFollowups()
+
+    suspend fun createActionFollowup(projectId: Long, action: String, date: LocalDate): Boolean =
+        database.withTransaction {
+            if (dao.getProject(projectId) == null || action.isBlank()) return@withTransaction false
+            dao.insertActionFollowup(ActionFollowupEntity(
+                projectId = projectId, action = action.trim().take(240), dueDate = date.toString(),
+            ))
+            true
+        }
+
+    suspend fun rescheduleActionFollowup(id: Long, date: LocalDate): Boolean = database.withTransaction {
+        val followup = dao.getActionFollowup(id) ?: return@withTransaction false
+        if (followup.status != "PENDING") return@withTransaction false
+        dao.rescheduleActionFollowup(id, date.toString())
+        true
+    }
+
+    suspend fun completeActionFollowup(id: Long, status: String, outcome: String): Boolean =
+        database.withTransaction {
+            val followup = dao.getActionFollowup(id) ?: return@withTransaction false
+            if (followup.status != "PENDING" || status !in setOf("DONE", "ADJUSTED", "DROPPED") ||
+                outcome.isBlank()) return@withTransaction false
+            dao.completeActionFollowup(id, status, outcome.trim().take(500), System.currentTimeMillis())
+            true
+        }
+
+    fun observeProjects() = dao.observeProjects()
+    fun observeProjectMilestones() = dao.observeProjectMilestones()
+    fun observeProjectEntries() = dao.observeProjectEntries()
+
+    suspend fun createProject(name: String): Long? =
+        name.trim().takeIf { it.isNotEmpty() }?.let { dao.insertProject(ProjectEntity(name = it.take(80))) }
+
+    suspend fun addProjectMilestone(projectId: Long, title: String): Boolean = database.withTransaction {
+        if (dao.getProject(projectId) == null || title.isBlank()) return@withTransaction false
+        dao.insertProjectMilestone(ProjectMilestoneEntity(projectId = projectId, title = title.trim().take(100)))
+        true
+    }
+
+    suspend fun setMilestoneComplete(id: Long, complete: Boolean): Boolean = database.withTransaction {
+        if (dao.getProjectMilestone(id) == null) return@withTransaction false
+        dao.updateMilestoneCompletion(id, if (complete) System.currentTimeMillis() else null)
+        true
+    }
+
+    suspend fun setProjectNextStep(id: Long, nextStep: String): Boolean = database.withTransaction {
+        if (dao.getProject(id) == null) return@withTransaction false
+        dao.updateProjectNextStep(id, nextStep.trim().take(240))
+        true
+    }
+
+    suspend fun setProjectEntry(projectId: Long, entryId: Long, linked: Boolean): Boolean = database.withTransaction {
+        if (dao.getProject(projectId) == null || (linked && dao.getEntry(entryId) == null)) return@withTransaction false
+        if (linked) dao.linkProjectEntry(ProjectEntryEntity(projectId, entryId))
+        else dao.unlinkProjectEntry(projectId, entryId)
+        true
+    }
+
+    fun observeKeepsakes(): Flow<List<KeepsakeEntity>> = dao.observeKeepsakes()
+
+    suspend fun craftKeepsake(entryId: Long, quote: String, title: String, material: String): Boolean =
+        database.withTransaction {
+            val entry = dao.getEntry(entryId) ?: return@withTransaction false
+            val review = dao.getReview(entryId) ?: return@withTransaction false
+            val notes = dao.getNotes(entryId)
+            val body = if (notes.isEmpty()) entry.body else notes.journalBody()
+            if (review.status != ReviewStatus.COMPLETE.name || review.revision != entry.revision ||
+                body != entry.body || quote.isBlank() || quote !in body || title.isBlank()
+            ) return@withTransaction false
+            dao.insertKeepsake(KeepsakeEntity(entryId = entryId, quote = quote, title = title.trim(), material = material))
+            true
+        }
+
+    suspend fun displayKeepsake(id: Long?, chapter: Boolean): Boolean = database.withTransaction {
+        if (id != null) {
+            val keepsake = dao.getKeepsake(id) ?: return@withTransaction false
+            val entry = dao.getEntry(keepsake.entryId) ?: return@withTransaction false
+            val notes = dao.getNotes(entry.id)
+            val body = if (notes.isEmpty()) entry.body else notes.journalBody()
+            if (keepsake.quote !in body) return@withTransaction false
+        }
+        if (chapter) {
+            dao.clearChapterDisplay()
+            if (id != null) dao.displayInChapter(id)
+        } else {
+            dao.clearShelf()
+            if (id != null) dao.displayOnShelf(id)
+        }
+        true
+    }
 
     fun observeNotes(): Flow<List<JournalNoteEntity>> = dao.observeNotes()
 
@@ -249,6 +349,14 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
                 .mapValues { (_, entries) -> entries.sumOf { it.points } }
         }
 
+    fun observeGrowthRewards(): Flow<List<UnlockedGrowthReward>> =
+        dao.observeGrowthRewards().map { rows ->
+            rows.mapNotNull { row ->
+                GrowthReward.entries.firstOrNull { it.id == row.rewardId }
+                    ?.let { UnlockedGrowthReward(it, row.sourceEntryId) }
+            }
+        }
+
     fun observeGrowthSources(): Flow<List<GrowthSource>> =
         dao.observeEffectiveGrowthSources().map { rows ->
             rows.groupBy { it.entryId }.values.map { sourceRows ->
@@ -377,10 +485,9 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
                 questionnaireVersion = TravelerQuestionnaire.VERSION,
                 questionIndex = TravelerQuestionnaire.QUESTION_COUNT,
                 strengthTendency = tendencies.getValue(CharacterAttribute.STRENGTH),
-                enduranceTendency = tendencies.getValue(CharacterAttribute.ENDURANCE),
                 knowledgeTendency = tendencies.getValue(CharacterAttribute.KNOWLEDGE),
-                skillTendency = tendencies.getValue(CharacterAttribute.SKILL),
-                resilienceTendency = tendencies.getValue(CharacterAttribute.RESILIENCE),
+                skillTendency = tendencies.getValue(CharacterAttribute.CREATION),
+                resilienceTendency = tendencies.getValue(CharacterAttribute.SPIRIT),
                 updatedAtEpochMillis = nowEpochMillis,
             ),
         )
@@ -561,6 +668,14 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
                 lastAttemptAtEpochMillis = System.currentTimeMillis(),
             ),
         )
+        val affectedTracks = awards.mapNotNull { it.action.attribute.growthTrack }.distinct()
+        for (track in affectedTracks) {
+            val attributeIds = CharacterAttribute.entries.filter { it.growthTrack == track }.map { it.name }
+            val points = dao.effectiveGrowthPoints(attributeIds)
+            GrowthReward.entries.filter { it.attribute == track && points >= it.threshold }.forEach { reward ->
+                dao.insertGrowthReward(GrowthRewardEntity(reward.id, entry.id))
+            }
+        }
     }
 
     suspend fun failReview(entryId: Long, revision: Int) = database.withTransaction {

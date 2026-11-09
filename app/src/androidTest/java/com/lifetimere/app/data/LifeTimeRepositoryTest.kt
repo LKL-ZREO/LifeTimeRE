@@ -114,7 +114,7 @@ class LifeTimeRepositoryTest {
         assertEquals("model-b", saved.metadata.model)
         assertEquals("prompt-v2", saved.metadata.promptVersion)
         assertEquals(300, saved.metadata.analyzedAtEpochMillis)
-        assertEquals(1, saved.ruleVersion)
+        assertEquals(com.lifetimere.app.domain.GrowthRules.VERSION, saved.ruleVersion)
     }
 
     @Test fun campIsDerivedFromDistinctEffectiveReviewDates() = runBlocking {

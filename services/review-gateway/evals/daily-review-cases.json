@@ -1,5 +1,5 @@
 {
-  "datasetVersion": "daily_review_eval_v3",
+  "datasetVersion": "daily_review_eval_v4",
   "cases": [
     {
       "id": "future_plan_only",
@@ -33,9 +33,11 @@
     },
     {
       "id": "rest_day",
-      "body": "今天休息了一天，让自己慢下来。",
-      "expectedActions": [],
-      "maxActions": 0
+      "body": "下午累得有点头昏，我停下来睡了半小时。",
+      "expectedActions": [
+        { "anchor": "停下来睡了半小时", "attribute": "SPIRIT", "allowedIntensity": [1] }
+      ],
+      "maxActions": 1
     },
     {
       "id": "non_mapped_meditation",
@@ -107,7 +109,7 @@
       "id": "coding_output",
       "body": "花了两个小时写完登录模块的代码并通过了测试。",
       "expectedActions": [
-        { "anchor": "写完登录模块的代码并通过了测试", "attribute": "SKILL", "allowedIntensity": [2] }
+        { "anchor": "写完登录模块的代码并通过了测试", "attribute": "CREATION", "allowedIntensity": [2] }
       ],
       "maxActions": 1
     },
@@ -115,7 +117,7 @@
       "id": "painting_practice",
       "body": "临摹练习了一个小时，完成了一张水彩画。",
       "expectedActions": [
-        { "anchor": "完成了一张水彩画", "attribute": "SKILL", "allowedIntensity": [2] }
+        { "anchor": "完成了一张水彩画", "attribute": "CREATION", "allowedIntensity": [2] }
       ],
       "maxActions": 1
     },
@@ -123,31 +125,27 @@
       "id": "short_instrument_practice",
       "body": "练了二十分钟吉他和弦转换。",
       "expectedActions": [
-        { "anchor": "练了二十分钟吉他和弦转换", "attribute": "SKILL", "allowedIntensity": [1] }
+        { "anchor": "练了二十分钟吉他和弦转换", "attribute": "CREATION", "allowedIntensity": [1] }
       ],
       "maxActions": 1
     },
     {
       "id": "pure_focus_endurance",
       "body": "把手机放到另一个房间，专注整理纸质档案两个小时。",
-      "expectedActions": [
-        { "anchor": "专注整理纸质档案两个小时", "attribute": "ENDURANCE", "allowedIntensity": [2] }
-      ],
-      "maxActions": 1
+      "expectedActions": [],
+      "maxActions": 0
     },
     {
       "id": "long_streak_endurance",
       "body": "今天完成了连续第三十天的晨间专注打卡。",
-      "expectedActions": [
-        { "anchor": "连续第三十天的晨间专注打卡", "attribute": "ENDURANCE", "allowedIntensity": [3] }
-      ],
-      "maxActions": 1
+      "expectedActions": [],
+      "maxActions": 0
     },
     {
       "id": "resilience_adjustment",
       "body": "第一次方案失败后，我缩小了范围，重新做了一版并跑通。",
       "expectedActions": [
-        { "anchor": "缩小了范围，重新做了一版并跑通", "attribute": "RESILIENCE", "allowedIntensity": [1, 2] }
+        { "anchor": "缩小了范围，重新做了一版并跑通", "attribute": "SPIRIT", "allowedIntensity": [1, 2] }
       ],
       "maxActions": 1
     },
@@ -155,7 +153,7 @@
       "id": "resilience_help_seeking",
       "body": "卡在这道题很久后，我主动请教了老师并弄懂了错误原因。",
       "expectedActions": [
-        { "anchor": "主动请教了老师", "attribute": "RESILIENCE", "allowedIntensity": [1] }
+        { "anchor": "主动请教了老师", "attribute": "SPIRIT", "allowedIntensity": [1] }
       ],
       "maxActions": 1
     },
@@ -187,7 +185,7 @@
       "expectedActions": [
         { "anchor": "跑了五公里", "attribute": "STRENGTH", "allowedIntensity": [1, 2] },
         { "anchor": "读了半小时专业书", "attribute": "KNOWLEDGE", "allowedIntensity": [1] },
-        { "anchor": "完成了一个网页组件", "attribute": "SKILL", "allowedIntensity": [1, 2] }
+        { "anchor": "完成了一个网页组件", "attribute": "CREATION", "allowedIntensity": [1, 2] }
       ],
       "maxActions": 3
     },
@@ -211,7 +209,7 @@
       "id": "new_dish_skill",
       "body": "照着配方第一次做出了完整的咖喱饭。",
       "expectedActions": [
-        { "anchor": "做出了完整的咖喱饭", "attribute": "SKILL", "allowedIntensity": [1] }
+        { "anchor": "做出了完整的咖喱饭", "attribute": "CREATION", "allowedIntensity": [1] }
       ],
       "maxActions": 1
     },

@@ -18,7 +18,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.lifetimere.app.ui.components.ArtTextButton as OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -206,7 +206,7 @@ private fun ProfileReveal(
             color = PixelMuted,
         )
         PixelPanel {
-            CharacterAttribute.entries.forEachIndexed { index, attribute ->
+            CharacterAttribute.active.forEachIndexed { index, attribute ->
                 Row(
                     modifier = Modifier.fillMaxWidth().semantics {
                         contentDescription = "${attribute.label} ${(tendencies[attribute] ?: 3) + (attributeGrowth[attribute] ?: 0)}"
@@ -218,7 +218,7 @@ private fun ProfileReveal(
                     Text(attribute.label, modifier = Modifier.weight(1f), color = PixelParchment)
                     Text("${(tendencies[attribute] ?: 3) + (attributeGrowth[attribute] ?: 0)}", color = attributeColor(attribute))
                 }
-                if (index != CharacterAttribute.entries.lastIndex) PixelDivider()
+                if (index != CharacterAttribute.active.lastIndex) PixelDivider()
             }
         }
         Text("确认后使用这组属性。已有的旅程成长已计入；重新登记不会清除成长。", style = MaterialTheme.typography.labelMedium, color = PixelTeal)
