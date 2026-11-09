@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.lifetimere.app.data.local.LifeTimeDatabase
 import com.lifetimere.app.data.model.ReviewStatus
+import com.lifetimere.app.data.model.ReviewAttemptStatus
 import com.lifetimere.app.domain.CharacterAttribute
 import com.lifetimere.app.domain.DailySettlement
 import com.lifetimere.app.domain.DetectedAction
@@ -96,7 +97,11 @@ class JournalSettlementTest {
         } }
         try { failing.settle(day.id); fail("Expected offline failure") } catch (_: IllegalStateException) { }
         assertEquals(1, repository.observeAttributeTotals().first()[CharacterAttribute.STRENGTH])
-        assertEquals(ReviewStatus.COMPLETE, repository.observeReview(day.id).first()!!.status)
+        val failedReview = repository.observeReview(day.id).first()!!
+        assertEquals(ReviewStatus.COMPLETE, failedReview.status)
+        assertEquals(ReviewAttemptStatus.FAILED, failedReview.attemptStatus)
+        assertTrue(failedReview.failureMessage.isNotBlank())
+        assertEquals(ReviewStatus.FAILED, repository.observeJournalStatuses().first()[day.id])
         assertNotNull(repository.journalSnapshot(day.id))
         assertTrue(failing.active.value.isEmpty())
     }

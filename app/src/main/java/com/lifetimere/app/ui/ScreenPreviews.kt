@@ -54,6 +54,9 @@ private fun HistoryPreview() {
                 onWriteClick = {},
                 onEditEntry = { _, _ -> },
                 onDeleteEntry = {},
+                weeklyReview = com.lifetimere.app.domain.WeeklyReviewBuilder.build(
+                    java.time.LocalDate.of(2026, 11, 1), emptyList(), emptyList(),
+                ),
             )
         }
     }

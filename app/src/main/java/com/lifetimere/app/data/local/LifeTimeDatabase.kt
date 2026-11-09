@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [DailyEntryEntity::class, JourneyDirectionEntity::class, ReviewEntity::class, EvidenceEntity::class, GrowthLedgerEntity::class, TravelerProfileEntity::class, TravelerAnswerEntity::class, ReviewFeedbackEntity::class, JournalNoteEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class LifeTimeDatabase : RoomDatabase() {
@@ -20,7 +20,16 @@ abstract class LifeTimeDatabase : RoomDatabase() {
             context.applicationContext,
             LifeTimeDatabase::class.java,
             "lifetimere.db",
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `reviews` ADD COLUMN `last_attempt_status` TEXT NOT NULL DEFAULT 'NONE'")
+                db.execSQL("ALTER TABLE `reviews` ADD COLUMN `last_error_kind` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `reviews` ADD COLUMN `last_error_message` TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE `reviews` ADD COLUMN `last_attempt_at_epoch_millis` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {

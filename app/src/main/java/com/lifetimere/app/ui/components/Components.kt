@@ -2,6 +2,7 @@ package com.lifetimere.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,9 +30,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lifetimere.app.domain.CharacterAttribute
+import com.lifetimere.app.R
 import com.lifetimere.app.ui.navigation.AppDestination
 import com.lifetimere.app.ui.theme.PixelAmber
 import com.lifetimere.app.ui.theme.PixelCoral
@@ -54,13 +65,26 @@ fun Page(
     action: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val art = when (title) {
+        "今日旅志" -> R.drawable.page_today_art
+        "旅人档案" -> R.drawable.page_character_art
+        "旅程回顾" -> R.drawable.page_history_art
+        "设置" -> R.drawable.world_workshop_art
+        else -> R.drawable.world_camp_art
+    }
     Box(modifier = Modifier.fillMaxSize().background(PixelNight)) {
-        PixelPattern(Modifier.matchParentSize())
+        Image(
+            painter = painterResource(art), contentDescription = null,
+            contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize(),
+        )
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+            listOf(Color(0x99101B24), Color(0xC9101B24), Color(0xE5101B24)),
+        )))
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 18.dp),
+                .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             Row(
@@ -69,7 +93,7 @@ fun Page(
             ) {
                 EchoRune(18.dp)
                 Text(
-                    "LIFETIME RE · ADVENTURE LOG",
+                    "LIFETIME RE  ·  旅程手记",
                     style = MaterialTheme.typography.labelSmall,
                     color = PixelGold,
                 )
@@ -133,8 +157,8 @@ fun PixelPanel(
         Card(
             modifier = Modifier.fillMaxWidth().padding(end = 4.dp, bottom = 4.dp),
             shape = RoundedCornerShape(2.dp),
-            border = BorderStroke(2.dp, PixelOutline),
-            colors = CardDefaults.cardColors(containerColor = PixelPanel),
+            border = BorderStroke(1.dp, PixelGold.copy(alpha = 0.62f)),
+            colors = CardDefaults.cardColors(containerColor = Color(0xEB172831)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         ) {
             Column(
@@ -261,33 +285,21 @@ fun AttributeIcon(attribute: CharacterAttribute, modifier: Modifier = Modifier) 
 
 @Composable
 fun PixelNavIcon(destination: AppDestination, selected: Boolean) {
-    val color = if (selected) PixelGold else PixelMuted
-    Canvas(Modifier.size(24.dp)) {
-        val u = size.minDimension / 12f
-        fun block(x: Int, y: Int, w: Int = 1, h: Int = 1) {
-            drawRect(color, Offset(x * u, y * u), androidx.compose.ui.geometry.Size(w * u, h * u))
-        }
-        when (destination) {
-            AppDestination.TODAY -> {
-                block(2, 1, 8, 10); block(1, 3, 10, 7)
-                drawRect(PixelInk, Offset(3 * u, 5 * u), androidx.compose.ui.geometry.Size(6 * u, u))
-                drawRect(PixelInk, Offset(3 * u, 8 * u), androidx.compose.ui.geometry.Size(4 * u, u))
-            }
-            AppDestination.CHARACTER -> {
-                block(4, 1, 4, 3); block(3, 4, 6, 3); block(2, 7, 8, 4)
-                drawRect(PixelInk, Offset(5 * u, 2 * u), androidx.compose.ui.geometry.Size(u, u))
-                drawRect(PixelInk, Offset(7 * u, 2 * u), androidx.compose.ui.geometry.Size(u, u))
-            }
-            AppDestination.WORLD -> {
-                block(1, 5, 10, 6); block(3, 3, 6, 2); block(5, 1, 2, 2)
-                drawRect(PixelInk, Offset(3 * u, 7 * u), androidx.compose.ui.geometry.Size(2 * u, 2 * u))
-                drawRect(PixelInk, Offset(7 * u, 6 * u), androidx.compose.ui.geometry.Size(2 * u, 3 * u))
-            }
-            AppDestination.HISTORY -> {
-                block(2, 1, 8, 10); block(1, 3, 2, 6)
-                drawRect(PixelInk, Offset(4 * u, 4 * u), androidx.compose.ui.geometry.Size(4 * u, u))
-                drawRect(PixelInk, Offset(4 * u, 7 * u), androidx.compose.ui.geometry.Size(4 * u, u))
-            }
-        }
+    val atlas = ImageBitmap.imageResource(R.drawable.page_nav_atlas)
+    val quadrant = atlas.width / 2
+    val source = when (destination) {
+        AppDestination.TODAY -> IntOffset(0, 0)
+        AppDestination.CHARACTER -> IntOffset(quadrant, 0)
+        AppDestination.WORLD -> IntOffset(0, quadrant)
+        AppDestination.HISTORY -> IntOffset(quadrant, quadrant)
+    }
+    Canvas(Modifier.size(38.dp).alpha(if (selected) 1f else .68f)) {
+        drawImage(
+            image = atlas,
+            srcOffset = source,
+            srcSize = IntSize(quadrant, quadrant),
+            dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+            filterQuality = FilterQuality.Medium,
+        )
     }
 }

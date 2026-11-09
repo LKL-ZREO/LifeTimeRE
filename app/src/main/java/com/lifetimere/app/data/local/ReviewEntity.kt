@@ -22,4 +22,8 @@ data class ReviewEntity(
     @ColumnInfo(name = "schema_version") val schemaVersion: String = "",
     @ColumnInfo(name = "analyzed_at_epoch_millis") val analyzedAtEpochMillis: Long = 0,
     @ColumnInfo(name = "updated_at_epoch_millis") val updatedAtEpochMillis: Long,
+    @ColumnInfo(name = "last_attempt_status") val lastAttemptStatus: String = "NONE",
+    @ColumnInfo(name = "last_error_kind") val lastErrorKind: String = "",
+    @ColumnInfo(name = "last_error_message") val lastErrorMessage: String = "",
+    @ColumnInfo(name = "last_attempt_at_epoch_millis") val lastAttemptAtEpochMillis: Long = 0,
 )

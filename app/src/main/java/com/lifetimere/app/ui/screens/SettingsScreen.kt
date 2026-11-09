@@ -90,10 +90,10 @@ fun SettingsScreen(
             PixelPanel {
                 Text("服务连接", style = MaterialTheme.typography.titleMedium, color = PixelTeal)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = { mode = AiConnectionMode.DEEPSEEK }, modifier = Modifier.weight(1f)) {
+                    OutlinedButton(onClick = { mode = AiConnectionMode.DEEPSEEK }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
                         Text(if (mode == AiConnectionMode.DEEPSEEK) "✓ DeepSeek 直连" else "DeepSeek 直连")
                     }
-                    OutlinedButton(onClick = { mode = AiConnectionMode.GATEWAY }, modifier = Modifier.weight(1f)) {
+                    OutlinedButton(onClick = { mode = AiConnectionMode.GATEWAY }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
                         Text(if (mode == AiConnectionMode.GATEWAY) "✓ 自建网关" else "自建网关")
                     }
                 }
@@ -141,12 +141,14 @@ fun SettingsScreen(
                     OutlinedButton(
                         onClick = { onSave(draft) },
                         modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.small,
                         border = BorderStroke(1.dp, PixelOutline),
                     ) { Text("保存") }
                     Button(
                         onClick = { onTestConnection(draft) },
                         enabled = enabled && !connectionState.isTesting,
                         modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.small,
                     ) { Text(if (connectionState.isTesting) "连接中" else "测试连接") }
                 }
                 ConnectionMessage(connectionState)
@@ -163,6 +165,7 @@ fun SettingsScreen(
                     onClick = { settlementMinuteOfDay = scheduleOptions[scheduleIndex - 1] },
                     enabled = scheduleIndex > 0,
                     modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.small,
                     border = BorderStroke(1.dp, PixelOutline),
                 ) { Text("提前 30 分") }
                 PixelTag(draft.settlementTimeLabel, PixelGold)
@@ -170,11 +173,12 @@ fun SettingsScreen(
                     onClick = { settlementMinuteOfDay = scheduleOptions[scheduleIndex + 1] },
                     enabled = scheduleIndex < scheduleOptions.lastIndex,
                     modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.small,
                     border = BorderStroke(1.dp, PixelOutline),
                 ) { Text("延后 30 分") }
             }
             Text("可选范围 18:00–23:30。修改后，尚未执行的汇总会按新时间重新安排。", color = PixelMuted)
-            Button(onClick = { onSave(draft) }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { onSave(draft) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
                 Text("保存汇总时间")
             }
         }

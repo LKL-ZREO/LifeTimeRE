@@ -44,7 +44,7 @@ class LifeTimeMigrationTest {
                 old.version = 4
             } finally { old.close() }
             val upgraded = Room.databaseBuilder(context, LifeTimeDatabase::class.java, name)
-                .addMigrations(LifeTimeDatabase.MIGRATION_4_5).build()
+                .addMigrations(LifeTimeDatabase.MIGRATION_4_5, LifeTimeDatabase.MIGRATION_5_6).build()
             try {
                 val repository = LifeTimeRepository(upgraded)
                 val entry = upgraded.dao().getEntry(1)!!
@@ -87,6 +87,7 @@ class LifeTimeMigrationTest {
                         LifeTimeDatabase.MIGRATION_2_3,
                         LifeTimeDatabase.MIGRATION_3_4,
                         LifeTimeDatabase.MIGRATION_4_5,
+                        LifeTimeDatabase.MIGRATION_5_6,
                     )
                     .build()
                 try {

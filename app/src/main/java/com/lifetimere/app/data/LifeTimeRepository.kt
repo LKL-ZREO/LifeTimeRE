@@ -16,6 +16,7 @@ import com.lifetimere.app.data.local.journalBody
 import com.lifetimere.app.data.model.DailyEntry
 import com.lifetimere.app.data.model.Review
 import com.lifetimere.app.data.model.ReviewEvidence
+import com.lifetimere.app.data.model.ReviewAttemptStatus
 import com.lifetimere.app.data.model.ReviewStatus
 import com.lifetimere.app.data.model.TravelerProfile
 import com.lifetimere.app.data.model.TravelerProfileStatus
@@ -54,14 +55,21 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
         entries.associate { entry ->
             val body = notes.filter { it.entryId == entry.id }.let { if (it.isEmpty()) entry.body else it.journalBody() }
             val review = reviews.firstOrNull { it.entryId == entry.id }
-            entry.id to if (body != entry.body) ReviewStatus.PENDING
-                else review?.let { ReviewStatus.valueOf(it.status) } ?: ReviewStatus.PENDING
+            val pendingAttempt = review?.lastAttemptStatus?.let {
+                runCatching { ReviewAttemptStatus.valueOf(it) }.getOrDefault(ReviewAttemptStatus.NONE)
+            } ?: ReviewAttemptStatus.NONE
+            entry.id to when (pendingAttempt) {
+                ReviewAttemptStatus.RUNNING -> ReviewStatus.RUNNING
+                ReviewAttemptStatus.FAILED -> ReviewStatus.FAILED
+                ReviewAttemptStatus.NONE -> if (body != entry.body) ReviewStatus.PENDING
+                    else review?.let { ReviewStatus.valueOf(it.status) } ?: ReviewStatus.PENDING
+            }
         }
     }
 
     suspend fun appendNote(date: LocalDate, timeZoneId: String, body: String, now: Long): DailyEntry = database.withTransaction {
         val text = body.trim()
-        require(text.isNotEmpty()) { "请先写下这次完成的事。" }
+        require(text.isNotEmpty()) { "请先写下今天想留下的片段。" }
         val existing = dao.getEntry(date.toString())
         val entry = existing?.toModel() ?: saveEntry(date, timeZoneId, text, now)
         var notes = dao.getNotes(entry.id)
@@ -73,6 +81,7 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
             "今天的记录合计最多 $MAX_DAY_LENGTH 字，请先整理已有记录。"
         }
         dao.insertNote(JournalNoteEntity(entryId = entry.id, body = text, createdAt = now, updatedAt = now))
+        resetAttempt(entry.id)
         entry
     }
 
@@ -83,12 +92,14 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
         require(text.isNotEmpty()) { "记录不能为空。" }
         require(notes.map { if (it.id == noteId) it.copy(body = text) else it }.journalBody().length <= MAX_DAY_LENGTH) { "当天记录合计最多 $MAX_DAY_LENGTH 字。" }
         dao.updateNote(note.copy(body = text, updatedAt = now))
+        resetAttempt(entryId)
     }
 
     suspend fun removeNote(entryId: Long, noteId: Long) = database.withTransaction {
         if (dao.getNotes(entryId).none { it.id == noteId }) return@withTransaction
         dao.deleteNote(noteId)
         if (dao.getNotes(entryId).isEmpty()) dao.getEntry(entryId)?.let { dao.deleteEntry(it) }
+        else resetAttempt(entryId)
     }
 
     suspend fun replaceJournal(entryId: Long, body: String, now: Long) = database.withTransaction {
@@ -96,6 +107,7 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
         require(body.isNotBlank() && body.trim().length <= MAX_DAY_LENGTH)
         dao.deleteNotes(entryId)
         dao.insertNote(JournalNoteEntity(entryId = entryId, body = body.trim(), createdAt = entry.createdAtEpochMillis, updatedAt = now))
+        resetAttempt(entryId)
     }
 
     data class JournalSnapshot(val entry: DailyEntry, val baseRevision: Int, val notes: List<JournalNoteEntity>)
@@ -105,12 +117,51 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
         val notes = dao.getNotes(entryId)
         val body = if (notes.isEmpty()) entry.body else notes.journalBody()
         val review = dao.getReview(entryId)
-        if (!force && body == entry.body && review?.status == ReviewStatus.COMPLETE.name && review.revision == entry.revision) return@withTransaction null
+        if (!force && body == entry.body && review?.status == ReviewStatus.COMPLETE.name &&
+            review.revision == entry.revision && review.lastAttemptStatus != ReviewAttemptStatus.FAILED.name
+        ) return@withTransaction null
         JournalSnapshot(entry.toModel().copy(body = body, revision = entry.revision + 1), entry.revision, notes)
     }
 
     suspend fun pendingJournalIds(): List<Long> = dao.getEntries().mapNotNull { entry ->
         entry.id.takeIf { journalSnapshot(it) != null }
+    }
+
+    suspend fun beginSettlementAttempt(snapshot: JournalSnapshot): Boolean = database.withTransaction {
+        val entry = dao.getEntry(snapshot.entry.id) ?: return@withTransaction false
+        if (entry.revision != snapshot.baseRevision || dao.getNotes(entry.id) != snapshot.notes) return@withTransaction false
+        val review = dao.getReview(entry.id) ?: ReviewEntity(
+            entryId = entry.id,
+            revision = entry.revision,
+            status = ReviewStatus.PENDING.name,
+            updatedAtEpochMillis = System.currentTimeMillis(),
+        )
+        dao.upsertReview(review.copy(
+            lastAttemptStatus = ReviewAttemptStatus.RUNNING.name,
+            lastErrorKind = "",
+            lastErrorMessage = "",
+            lastAttemptAtEpochMillis = System.currentTimeMillis(),
+        ))
+        true
+    }
+
+    suspend fun failSettlementAttempt(snapshot: JournalSnapshot, kind: String, message: String) = database.withTransaction {
+        val entry = dao.getEntry(snapshot.entry.id) ?: return@withTransaction
+        if (entry.revision != snapshot.baseRevision || dao.getNotes(entry.id) != snapshot.notes) return@withTransaction
+        dao.getReview(entry.id)?.let { review ->
+            dao.upsertReview(review.copy(
+                lastAttemptStatus = ReviewAttemptStatus.FAILED.name,
+                lastErrorKind = kind,
+                lastErrorMessage = message.take(180),
+                lastAttemptAtEpochMillis = System.currentTimeMillis(),
+            ))
+        }
+    }
+
+    suspend fun cancelSettlementAttempt(snapshot: JournalSnapshot) = database.withTransaction {
+        val entry = dao.getEntry(snapshot.entry.id) ?: return@withTransaction
+        if (entry.revision != snapshot.baseRevision || dao.getNotes(entry.id) != snapshot.notes) return@withTransaction
+        resetAttempt(entry.id)
     }
 
     suspend fun settleJournal(snapshot: JournalSnapshot, result: DetectedReview): Boolean = database.withTransaction {
@@ -161,6 +212,11 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
                     schemaVersion = row.schemaVersion,
                     analyzedAtEpochMillis = row.analyzedAtEpochMillis,
                 ),
+                attemptStatus = runCatching { ReviewAttemptStatus.valueOf(row.lastAttemptStatus) }
+                    .getOrDefault(ReviewAttemptStatus.NONE),
+                failureKind = row.lastErrorKind,
+                failureMessage = row.lastErrorMessage,
+                lastAttemptAtEpochMillis = row.lastAttemptAtEpochMillis,
             )
         }
     }
@@ -169,6 +225,23 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
         dao.observeReviews().map { reviews ->
             reviews.associate { it.entryId to ReviewStatus.valueOf(it.status) }
         }
+
+    fun observeReviewFailures(): Flow<Map<Long, String>> = dao.observeReviews().map { reviews ->
+        reviews.mapNotNull { review ->
+            review.lastErrorMessage.takeIf { it.isNotBlank() }?.let { review.entryId to it }
+        }.toMap()
+    }
+
+    suspend fun recoverInterruptedAttempts() = database.withTransaction {
+        dao.getReviews().filter { it.lastAttemptStatus == ReviewAttemptStatus.RUNNING.name }.forEach { review ->
+            dao.upsertReview(review.copy(
+                lastAttemptStatus = ReviewAttemptStatus.FAILED.name,
+                lastErrorKind = "INTERRUPTED",
+                lastErrorMessage = "上次汇总被系统中断，请重新汇总。",
+                lastAttemptAtEpochMillis = System.currentTimeMillis(),
+            ))
+        }
+    }
 
     fun observeAttributeTotals(): Flow<Map<CharacterAttribute, Int>> =
         dao.observeEffectiveGrowth().map { growth ->
@@ -482,6 +555,10 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
                 schemaVersion = result.metadata.schemaVersion,
                 analyzedAtEpochMillis = result.metadata.analyzedAtEpochMillis,
                 updatedAtEpochMillis = System.currentTimeMillis(),
+                lastAttemptStatus = ReviewAttemptStatus.NONE.name,
+                lastErrorKind = "",
+                lastErrorMessage = "",
+                lastAttemptAtEpochMillis = System.currentTimeMillis(),
             ),
         )
     }
@@ -490,6 +567,16 @@ class LifeTimeRepository(private val database: LifeTimeDatabase) {
         val current = dao.getReview(entryId)
         if (current?.revision == revision && current.status == ReviewStatus.RUNNING.name) {
             dao.upsertReview(current.copy(status = ReviewStatus.FAILED.name, updatedAtEpochMillis = System.currentTimeMillis()))
+        }
+    }
+
+    private suspend fun resetAttempt(entryId: Long) {
+        dao.getReview(entryId)?.let { review ->
+            dao.upsertReview(review.copy(
+                lastAttemptStatus = ReviewAttemptStatus.NONE.name,
+                lastErrorKind = "",
+                lastErrorMessage = "",
+            ))
         }
     }
 

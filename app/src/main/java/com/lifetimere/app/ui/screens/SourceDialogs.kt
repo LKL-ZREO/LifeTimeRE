@@ -155,6 +155,7 @@ fun ReviewCorrectionDialog(
                     OutlinedButton(
                         onClick = { selected = reason },
                         modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small,
                     ) {
                         Text(if (selected == reason) "[已选择] ${reason.label}" else reason.label)
                     }

@@ -5,6 +5,8 @@ import com.lifetimere.app.domain.ReviewAnalysisMetadata
 
 enum class ReviewStatus { PENDING, RUNNING, COMPLETE, FAILED }
 
+enum class ReviewAttemptStatus { NONE, RUNNING, FAILED }
+
 data class ReviewEvidence(
     val actionId: String,
     val attribute: CharacterAttribute,
@@ -22,4 +24,8 @@ data class Review(
     val evidence: List<ReviewEvidence>,
     val ruleVersion: Int,
     val metadata: ReviewAnalysisMetadata,
+    val attemptStatus: ReviewAttemptStatus = ReviewAttemptStatus.NONE,
+    val failureKind: String = "",
+    val failureMessage: String = "",
+    val lastAttemptAtEpochMillis: Long = 0,
 )

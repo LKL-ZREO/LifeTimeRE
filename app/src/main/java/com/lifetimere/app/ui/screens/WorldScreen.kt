@@ -105,6 +105,7 @@ fun WorldScreen(
                             showCampArchive = true
                         },
                         modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.small,
                     ) { Text("查看营地档案") }
                     TextButton(onClick = { showFirstEchoMessage = false }) { Text("继续") }
                 }
@@ -121,6 +122,7 @@ fun WorldScreen(
             OutlinedButton(
                 onClick = { showDirectionDialog = true },
                 modifier = Modifier.fillMaxWidth().border(1.dp, PixelTeal, MaterialTheme.shapes.small),
+                shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = PixelTeal),
                 border = null,
             ) {

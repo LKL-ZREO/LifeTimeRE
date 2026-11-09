@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.lifetimere.app.data.local.JournalNoteEntity
 import com.lifetimere.app.data.local.journalBody
 import com.lifetimere.app.data.model.ReviewStatus
+import com.lifetimere.app.data.model.ReviewAttemptStatus
 import com.lifetimere.app.domain.ReviewFeedbackReason
 import com.lifetimere.app.ui.LifeTimeViewModel
 import com.lifetimere.app.ui.TodayUiState
@@ -55,7 +56,7 @@ fun TodayScreen(
     var deleting by remember { mutableStateOf<JournalNoteEntity?>(null) }
     Page(
         title = "今日旅志",
-        subtitle = "做完一件，记下一笔。夜晚的营火会把足迹编成回响。",
+        subtitle = "完成、尝试、调整或休息，都可以成为今天的一段足迹。",
         action = {
             IconButton(onClick = onOpenSettings) {
                 Icon(Icons.Outlined.Settings, contentDescription = "打开设置", tint = PixelGold)
@@ -67,21 +68,35 @@ fun TodayScreen(
             PixelTag("已记录 ${uiState.notes.size} 笔", PixelTeal)
         }
         PixelPanel {
-            Text("刚刚完成了什么？", style = MaterialTheme.typography.titleMedium, color = PixelParchment)
-            Text("不用等到睡前，也不用整理成日记。每次只写一件事就好。", color = PixelMuted)
+            Text("今天想留下什么？", style = MaterialTheme.typography.titleMedium, color = PixelParchment)
+            Text("不用整理成完整日记。做成的事、没做完的尝试、临时调整和好好休息，都可以记下来。", color = PixelMuted)
             OutlinedTextField(
                 value = uiState.draft,
                 onValueChange = onDraftChange,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                placeholder = { Text("例如：刚跑完三公里，最后一公里有点吃力。") },
+                placeholder = { Text("例如：画完一张草图；今天状态不好，决定先休息。") },
                 supportingText = { Text("今日已保存 ${uiState.notes.journalBody().length} / 5000 字 · 本次 ${uiState.draft.length} 字") },
             )
-            Button(onClick = onSave, enabled = uiState.canSave, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onSave, enabled = uiState.canSave, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
                 Text(uiState.buttonLabel)
             }
         }
         uiState.notice?.let { message ->
             PixelPanel { Text(message, color = PixelParchment, style = MaterialTheme.typography.bodyMedium) }
+        }
+        uiState.savedFootprint?.let { footprint ->
+            PixelPanel {
+                PixelTag("足迹已进入营地", PixelTeal)
+                Text("“${footprint.preview}”", color = PixelParchment)
+                Text("今天已留下 ${footprint.noteCount} 笔。夜晚汇总前，它已经安全保存在本机。", color = PixelMuted)
+            }
+        }
+        if (uiState.hasPendingNotes && uiState.review?.attemptStatus == ReviewAttemptStatus.FAILED) {
+            PixelPanel {
+                PixelTag("上次汇总未完成", PixelCoral)
+                Text(uiState.review.failureMessage.ifBlank { "AI 回响暂时没有完成，请稍后重试。" }, color = PixelParchment)
+                Text("旅志和上一次有效成长都已保留。", color = PixelMuted)
+            }
         }
         PixelPanel {
             PixelTag("营火夜谈 · 每日 ${uiState.settlementTimeLabel}", PixelGold)

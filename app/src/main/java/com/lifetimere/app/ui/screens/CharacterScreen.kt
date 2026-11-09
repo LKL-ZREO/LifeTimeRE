@@ -1,6 +1,9 @@
 package com.lifetimere.app.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,8 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.lifetimere.app.domain.CharacterAttribute
+import com.lifetimere.app.R
 import com.lifetimere.app.domain.GrowthSource
 import com.lifetimere.app.domain.ReviewFeedbackReason
 import com.lifetimere.app.data.model.TravelerProfile
@@ -29,12 +35,12 @@ import com.lifetimere.app.ui.components.Page
 import com.lifetimere.app.ui.components.PixelDivider
 import com.lifetimere.app.ui.components.PixelPanel
 import com.lifetimere.app.ui.components.PixelTag
-import com.lifetimere.app.ui.components.PixelTraveler
 import com.lifetimere.app.ui.components.attributeColor
 import com.lifetimere.app.ui.theme.PixelGold
 import com.lifetimere.app.ui.theme.PixelMuted
 import com.lifetimere.app.ui.theme.PixelParchment
 import com.lifetimere.app.ui.theme.PixelTeal
+import com.lifetimere.app.ui.theme.PixelNight
 
 @Composable
 fun CharacterScreen(
@@ -60,7 +66,14 @@ fun CharacterScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                PixelTraveler(Modifier.size(width = 114.dp, height = 152.dp))
+                Image(
+                    painter = painterResource(R.drawable.world_traveler_art),
+                    contentDescription = "披着青色斗篷的旅人",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(width = 114.dp, height = 152.dp)
+                        .background(PixelNight.copy(alpha = .65f))
+                        .border(1.dp, PixelGold.copy(alpha = .65f)),
+                )
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(9.dp),
@@ -108,7 +121,7 @@ fun CharacterScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = PixelMuted,
             )
-            OutlinedButton(onClick = onEditProfile) {
+            OutlinedButton(onClick = onEditProfile, shape = MaterialTheme.shapes.small) {
                 Text(if (travelerProfile?.status == TravelerProfileStatus.COMPLETED) "重新登记" else "登记旅人")
             }
         }

@@ -58,6 +58,9 @@ interface LifeTimeDao {
     @Query("SELECT * FROM reviews")
     fun observeReviews(): Flow<List<ReviewEntity>>
 
+    @Query("SELECT * FROM reviews")
+    suspend fun getReviews(): List<ReviewEntity>
+
     @Query("SELECT * FROM reviews WHERE entry_id = :entryId LIMIT 1")
     suspend fun getReview(entryId: Long): ReviewEntity?
 

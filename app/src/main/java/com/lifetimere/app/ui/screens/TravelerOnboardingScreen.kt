@@ -1,6 +1,7 @@
 package com.lifetimere.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,11 +24,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.lifetimere.app.data.model.TravelerProfile
+import com.lifetimere.app.R
 import com.lifetimere.app.data.model.TravelerProfileStatus
 import com.lifetimere.app.domain.CharacterAttribute
 import com.lifetimere.app.domain.TravelerProfileScorer
@@ -58,6 +64,14 @@ fun TravelerOnboardingScreen(
     attributeGrowth: Map<CharacterAttribute, Int> = emptyMap(),
 ) {
     Box(Modifier.fillMaxSize().background(PixelNight)) {
+        Image(
+            painter = painterResource(R.drawable.page_character_art),
+            contentDescription = null, contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize(),
+        )
+        Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+            listOf(Color(0xB0101B24), Color(0xD0101B24), Color(0xF0101B24)),
+        )))
         when {
             profile == null -> RegistrationIntro(onBegin = onBegin, onSkip = onSkip)
             profile.status == TravelerProfileStatus.IN_PROGRESS || profile.status == TravelerProfileStatus.RETAKING -> {
@@ -110,7 +124,7 @@ private fun RegistrationIntro(onBegin: () -> Unit, onSkip: () -> Unit) {
             Text("没有标准答案，也不需要输入文字。你的选择会成为角色的起始属性，之后会随旅程继续成长。", color = PixelMuted)
         }
         Spacer(Modifier.weight(1f))
-        OutlinedButton(onClick = onBegin, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(onClick = onBegin, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
             Text("开始登记")
         }
         TextButton(onClick = onSkip, modifier = Modifier.fillMaxWidth()) {
@@ -209,7 +223,7 @@ private fun ProfileReveal(
         }
         Text("确认后使用这组属性。已有的旅程成长已计入；重新登记不会清除成长。", style = MaterialTheme.typography.labelMedium, color = PixelTeal)
         Spacer(Modifier.height(4.dp))
-        OutlinedButton(onClick = onComplete, modifier = Modifier.fillMaxWidth()) { Text("进入营地") }
+        OutlinedButton(onClick = onComplete, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) { Text("进入营地") }
         TextButton(onClick = onRetake, modifier = Modifier.fillMaxWidth()) { Text("重新回答", color = PixelTeal) }
         TextButton(onClick = onSkip, modifier = Modifier.fillMaxWidth()) { Text("稍后再说", color = PixelMuted) }
     }

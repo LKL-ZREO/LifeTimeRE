@@ -32,6 +32,7 @@ class LifeTimeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         reviewScheduler.startRecovery()
+        appScope.launch { repository.recoverInterruptedAttempts() }
         appScope.launch {
             repository.observeNotes().collect {
                 reviewScheduler.schedulePending()

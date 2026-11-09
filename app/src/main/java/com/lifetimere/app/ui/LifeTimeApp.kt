@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,7 +45,7 @@ import com.lifetimere.app.ui.screens.HistoryScreen
 import com.lifetimere.app.ui.screens.TodayScreen
 import com.lifetimere.app.ui.screens.SettingsScreen
 import com.lifetimere.app.ui.screens.TravelerOnboardingScreen
-import com.lifetimere.app.ui.screens.WorldScreen
+import com.lifetimere.app.ui.screens.WorldDemoScreen
 import com.lifetimere.app.ui.theme.PixelGold
 import com.lifetimere.app.ui.theme.PixelInk
 import com.lifetimere.app.ui.theme.PixelMuted
@@ -66,7 +67,9 @@ fun LifeTimeApp(appViewModel: LifeTimeViewModel = viewModel()) {
     val journeyDirection by appViewModel.journeyDirection.collectAsStateWithLifecycle()
     val attributeTotals by appViewModel.attributeTotals.collectAsStateWithLifecycle()
     val reviewStatuses by appViewModel.reviewStatuses.collectAsStateWithLifecycle()
+    val reviewFailures by appViewModel.reviewFailures.collectAsStateWithLifecycle()
     val growthSources by appViewModel.growthSources.collectAsStateWithLifecycle()
+    val weeklyReview by appViewModel.weeklyReview.collectAsStateWithLifecycle()
     val campState by appViewModel.campState.collectAsStateWithLifecycle()
     val travelerProfile by appViewModel.travelerProfile.collectAsStateWithLifecycle()
     val isTravelerProfileLoaded by appViewModel.isTravelerProfileLoaded.collectAsStateWithLifecycle()
@@ -134,14 +137,14 @@ fun LifeTimeApp(appViewModel: LifeTimeViewModel = viewModel()) {
             if (currentRoute != SETTINGS_ROUTE) Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(PixelInk)
-                    .border(width = 1.dp, color = PixelOutline)
+                    .background(Color(0xFF19272A))
+                    .border(width = 1.dp, color = PixelGold.copy(alpha = .55f))
                     .navigationBarsPadding(),
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .height(72.dp)
                         .selectableGroup(),
                 ) {
                     AppDestination.entries.forEach { destination ->
@@ -149,7 +152,7 @@ fun LifeTimeApp(appViewModel: LifeTimeViewModel = viewModel()) {
                         Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(64.dp)
+                                .height(72.dp)
                                 .selectable(
                                     selected = selected,
                                     role = Role.Tab,
@@ -166,8 +169,8 @@ fun LifeTimeApp(appViewModel: LifeTimeViewModel = viewModel()) {
                                         }
                                     },
                                 )
-                                .background(if (selected) PixelGold.copy(alpha = 0.10f) else PixelInk)
-                                .padding(top = 8.dp, bottom = 6.dp),
+                                .background(if (selected) PixelGold.copy(alpha = 0.16f) else Color(0xFF19272A))
+                                .padding(top = 5.dp, bottom = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(3.dp),
                         ) {
@@ -222,20 +225,13 @@ fun LifeTimeApp(appViewModel: LifeTimeViewModel = viewModel()) {
                 )
             }
             composable(AppDestination.WORLD.route) {
-                WorldScreen(
-                    journeyDirection = journeyDirection,
-                    campState = campState,
-                    onSaveJourneyDirection = appViewModel::saveJourneyDirection,
-                    isVisible = currentRoute == AppDestination.WORLD.route,
-                    firstEchoSequence = firstEchoAnimation,
-                    onFirstEchoAnimationComplete = { firstEchoAnimation = false },
-                    onReportReview = appViewModel::reportReview,
-                )
+                WorldDemoScreen()
             }
             composable(AppDestination.HISTORY.route) {
                 HistoryScreen(
                     entries = entries,
                     reviewStatuses = reviewStatuses,
+                    reviewFailures = reviewFailures,
                     onWriteClick = {
                         navController.navigate(AppDestination.TODAY.route) {
                             popUpTo(navController.graph.findStartDestination().id)
@@ -245,6 +241,7 @@ fun LifeTimeApp(appViewModel: LifeTimeViewModel = viewModel()) {
                     onEditEntry = appViewModel::updateEntry,
                     onDeleteEntry = appViewModel::deleteEntry,
                     sources = growthSources.associateBy { it.entry.id },
+                    weeklyReview = weeklyReview,
                     onSummarize = appViewModel::summarizeEntry,
                 )
             }

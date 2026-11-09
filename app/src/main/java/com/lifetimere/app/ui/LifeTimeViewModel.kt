@@ -8,6 +8,7 @@ import com.lifetimere.app.data.LifeTimeRepository
 import com.lifetimere.app.data.model.DailyEntry
 import com.lifetimere.app.data.model.Review
 import com.lifetimere.app.data.model.ReviewStatus
+import com.lifetimere.app.data.model.ReviewAttemptStatus
 import com.lifetimere.app.data.model.TravelerProfile
 import com.lifetimere.app.data.local.JournalNoteEntity
 import com.lifetimere.app.data.local.journalBody
@@ -19,6 +20,8 @@ import com.lifetimere.app.domain.AiConnectionMode
 import com.lifetimere.app.domain.GrowthSource
 import com.lifetimere.app.domain.ReviewFeedbackReason
 import com.lifetimere.app.domain.TravelerQuestionnaire
+import com.lifetimere.app.domain.WeeklyReview
+import com.lifetimere.app.domain.WeeklyReviewBuilder
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
@@ -48,9 +51,11 @@ data class TodayUiState(
     val aiConfigured: Boolean = false,
     val notes: List<JournalNoteEntity> = emptyList(),
     val settlementTimeLabel: String = "22:00",
+    val savedFootprint: SavedFootprintUi? = null,
 ) {
     val hasPendingNotes: Boolean get() = notes.isNotEmpty() &&
-        (notes.journalBody() != savedEntry?.body || review?.status != ReviewStatus.COMPLETE)
+        (notes.journalBody() != savedEntry?.body || review?.status != ReviewStatus.COMPLETE ||
+            review?.attemptStatus in setOf(ReviewAttemptStatus.RUNNING, ReviewAttemptStatus.FAILED))
     val canSave: Boolean
         get() = isLoaded && !isSaving && draft.isNotBlank()
 
@@ -58,10 +63,15 @@ data class TodayUiState(
         get() = when {
             !isLoaded -> "正在读取旅志"
             isSaving -> "正在保存"
-            draft.isBlank() -> "写一件刚完成的事"
+            draft.isBlank() -> "写下这一刻"
             else -> "记下这一笔"
         }
 }
+
+data class SavedFootprintUi(
+    val preview: String,
+    val noteCount: Int,
+)
 
 data class AiConnectionUiState(
     val isTesting: Boolean = false,
@@ -90,6 +100,7 @@ class LifeTimeViewModel(application: Application) : AndroidViewModel(application
     private val isTodayLoaded = MutableStateFlow(false)
     private val isSaving = MutableStateFlow(false)
     private val notice = MutableStateFlow<String?>(null)
+    private val savedFootprint = MutableStateFlow<SavedFootprintUi?>(null)
     private val firstCampEchoEventsMutable = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val firstCampEchoEvents = firstCampEchoEventsMutable.asSharedFlow()
     private val worldFeedbackPreferences = application.getSharedPreferences("world_feedback", Application.MODE_PRIVATE)
@@ -103,19 +114,24 @@ class LifeTimeViewModel(application: Application) : AndroidViewModel(application
         notes.filter { it.entryId == entry?.id }
     }
 
+    private val todayFeedback = combine(notice, savedFootprint) { currentNotice, footprint ->
+        currentNotice to footprint
+    }
+
     private val todayBaseState = combine(
         draft,
         todayEntry,
         isTodayLoaded,
         isSaving,
-        notice,
-    ) { currentDraft, entry, loaded, saving, currentNotice ->
+        todayFeedback,
+    ) { currentDraft, entry, loaded, saving, feedback ->
         TodayUiState(
             draft = currentDraft,
             savedEntry = entry,
             isLoaded = loaded,
             isSaving = saving,
-            notice = currentNotice,
+            notice = feedback.first,
+            savedFootprint = feedback.second,
             dateLabel = formatDate(todayDate),
         )
     }
@@ -161,10 +177,24 @@ class LifeTimeViewModel(application: Application) : AndroidViewModel(application
         initialValue = emptyMap(),
     )
 
+    val reviewFailures: StateFlow<Map<Long, String>> = repository.observeReviewFailures().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyMap(),
+    )
+
     val growthSources: StateFlow<List<GrowthSource>> = repository.observeGrowthSources().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList(),
+    )
+
+    val weeklyReview: StateFlow<WeeklyReview> = combine(entries, growthSources, currentDate) { journal, sources, date ->
+        WeeklyReviewBuilder.build(date, journal, sources)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = WeeklyReviewBuilder.build(LocalDate.now(), emptyList(), emptyList()),
     )
 
     val campState: StateFlow<CampState> = repository.observeCampState().stateIn(
@@ -224,6 +254,8 @@ class LifeTimeViewModel(application: Application) : AndroidViewModel(application
             }.onSuccess { saved ->
                 if (draft.value.trim() == body) draft.value = ""
                 if (date == todayDate) todayEntry.value = saved
+                val count = repository.observeNotes().first().count { it.entryId == saved.id }
+                savedFootprint.value = SavedFootprintUi(body.take(80), count)
                 notice.value = if (isAiAvailable()) "已记下这一笔。每天 ${aiSettings.value.settlementTimeLabel} 后自动汇总；之后补记也会纳入当天结算。"
                     else "已保存在本机。配置 AI 服务后，将自动汇总当天记录。"
                 app.reviewScheduler.schedulePending()
